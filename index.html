@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BLACKSTAR Detailing — Запись на услуги</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #0b0b0f;
+            --card: #15151c;
+            --card-active: #22222d;
+            --accent: #f39c12;
+            --accent-grad: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+            --text: #f5f5f7;
+            --subtext: #9a9aa6;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 110px; }
+        .header { background: radial-gradient(circle at top right, rgba(243,156,18,0.2), transparent 65%), #121218; padding: 22px 18px 18px; border-bottom: 1px solid var(--border); }
+        .badge { display: inline-block; font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: #0b0b0f; background: var(--accent-grad); padding: 4px 10px; border-radius: 20px; font-weight: 700; margin-bottom: 8px; }
+        .header h1 { font-size: 22px; font-weight: 700; }
+        .header p { font-size: 13px; color: var(--subtext); margin-top: 4px; }
+        .section { padding: 16px 16px 4px; }
+        .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--subtext); margin-bottom: 12px; font-weight: 600; }
+        .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab { white-space: nowrap; padding: 9px 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; }
+        .tab.active { background: var(--accent-grad); color: #0b0b0f; font-weight: 700; border-color: transparent; }
+        .service-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+        .service-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .service-card.selected { background: var(--card-active); border-color: #f39c12; box-shadow: 0 0 0 1px #f39c12; }
+        .srv-info h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .srv-info span { font-size: 12px; color: var(--subtext); }
+        .srv-price { font-size: 15px; font-weight: 700; color: #f39c12; white-space: nowrap; margin-left: 12px; }
+        .masters-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .master-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px; cursor: pointer; }
+        .master-card.selected { background: var(--card-active); border-color: #f39c12; }
+        .master-card h4 { font-size: 14px; margin-bottom: 3px; }
+        .master-card p { font-size: 11px; color: var(--subtext); margin-bottom: 6px; }
+        .rating { font-size: 12px; color: #ffd166; font-weight: 600; }
+        .dates-row, .slots-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .chip { padding: 10px 13px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); font-size: 13px; cursor: pointer; }
+        .chip.selected { background: var(--accent-grad); color: #0b0b0f; font-weight: 700; border-color: transparent; }
+        .input-box { width: 100%; padding: 13px 14px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); color: var(--text); font-size: 15px; outline: none; }
+        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(18, 18, 24, 0.95); backdrop-filter: blur(12px); padding: 12px 16px 18px; border-top: 1px solid var(--border); }
+        .submit-btn { width: 100%; padding: 15px; border: none; border-radius: 14px; background: var(--accent-grad); color: #0b0b0f; font-size: 16px; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <span class="badge">🛡 Detailing Mini App</span>
+        <h1>BLACKSTAR Detailing</h1>
+        <p>Защита кузова, полировка и уход за автомобилем</p>
+    </div>
+    <div class="section">
+        <div class="section-title">1. Услуга</div>
+        <div class="tabs" id="categoryTabs"></div>
+        <div class="service-list" id="serviceList"></div>
+    </div>
+    <div class="section">
+        <div class="section-title">2. Мастер</div>
+        <div class="masters-grid" id="masterList"></div>
+    </div>
+    <div class="section">
+        <div class="section-title">3. Дата визита</div>
+        <div class="dates-row" id="dateList"></div>
+    </div>
+    <div class="section">
+        <div class="section-title">4. Время бокса</div>
+        <div class="slots-row" id="slotList"></div>
+    </div>
+    <div class="section">
+        <div class="section-title">5. Ваш телефон</div>
+        <input type="tel" id="phoneInput" class="input-box" placeholder="+7 (999) 123-45-67" value="+7">
+    </div>
+    <div class="footer-bar">
+        <button class="submit-btn" id="submitBtn" onclick="submitBooking()">Записаться в бокс</button>
+    </div>
+    <script>
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        if (tg) { tg.expand(); tg.ready(); }
+        const CATALOG = [
+            { id: 1, name: "🛡 Защитные пленки (PPF)", services: [
+                { id: 1, name: "Полная оклейка кузова полиуретаном", price: 145000, duration: "8 ч" },
+                { id: 2, name: "Оклейка зоны риска", price: 45000, duration: "4 ч" }
+            ], masters: [{ id: 1, name: "Алексей Смирнов", spec: "Старший мастер PPF", rating: "5.0" }] },
+            { id: 2, name: "✨ Полировка и керамика", services: [
+                { id: 3, name: "Абразивная полировка + Керамика", price: 32000, duration: "6 ч" },
+                { id: 4, name: "Восстановительная полировка фар", price: 3500, duration: "1.5 ч" }
+            ], masters: [{ id: 2, name: "Денис Васильев", spec: "Технолог-детейлер", rating: "4.9" }] },
+            { id: 3, name: "🧼 Детейлинг-мойка", services: [
+                { id: 5, name: "Детейлинг-мойка и подвеска", price: 3500, duration: "2 ч" },
+                { id: 6, name: "Полная химчистка салона", price: 16000, duration: "5 ч" }
+            ], masters: [{ id: 3, name: "Иван Морозов", spec: "Специалист по салону", rating: "4.8" }] },
+            { id: 4, name: "🛞 Тонировка", services: [
+                { id: 7, name: "Атермальная тонировка полукруга", price: 9000, duration: "2.5 ч" }
+            ], masters: [{ id: 4, name: "Максим Орлов", spec: "Мастер по тонировке", rating: "4.9" }] }
+        ];
+        const SLOTS = ["09:00", "12:00", "15:00", "18:00"];
+        let state = { catIndex: 0, service: CATALOG[0].services[0], master: CATALOG[0].masters[0], date: "", time: "12:00" };
+        function generateDates() {
+            const weekdays = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+            const list = []; const now = new Date();
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(now); d.setDate(now.getDate() + i);
+                const yyyy = d.getFullYear(); const mm = String(d.getMonth() + 1).padStart(2, "0"); const dd = String(d.getDate()).padStart(2, "0");
+                const iso = `${yyyy}-${mm}-${dd}`;
+                const label = i === 0 ? `Сегодня (${dd}.${mm})` : (i === 1 ? `Завтра (${dd}.${mm})` : `${dd}.${mm} (${weekdays[d.getDay()]})`);
+                list.push({ iso, label });
+            }
+            state.date = list[0].iso; return list;
+        }
+        const DATES = generateDates();
+        function renderAll() {
+            const tabsEl = document.getElementById("categoryTabs"); tabsEl.innerHTML = "";
+            CATALOG.forEach((cat, idx) => {
+                const btn = document.createElement("div"); btn.className = "tab" + (idx === state.catIndex ? " active" : "");
+                btn.textContent = cat.name; btn.onclick = () => { state.catIndex = idx; state.service = CATALOG[idx].services[0]; state.master = CATALOG[idx].masters[0]; renderAll(); };
+                tabsEl.appendChild(btn);
+            });
+            const srvEl = document.getElementById("serviceList"); srvEl.innerHTML = "";
+            CATALOG[state.catIndex].services.forEach(srv => {
+                const card = document.createElement("div"); card.className = "service-card" + (state.service.id === srv.id ? " selected" : "");
+                card.innerHTML = `<div class="srv-info"><h3>${srv.name}</h3><span>⏱ ${srv.duration}</span></div><div class="srv-price">${srv.price} ₽</div>`;
+                card.onclick = () => { state.service = srv; renderAll(); }; srvEl.appendChild(card);
+            });
+            const mstEl = document.getElementById("masterList"); mstEl.innerHTML = "";
+            CATALOG[state.catIndex].masters.forEach(mst => {
+                const card = document.createElement("div"); card.className = "master-card" + (state.master.id === mst.id ? " selected" : "");
+                card.innerHTML = `<h4>👩‍🎨 ${mst.name}</h4><p>${mst.spec}</p><div class="rating">⭐ ${mst.rating}</div>`;
+                card.onclick = () => { state.master = mst; renderAll(); }; mstEl.appendChild(card);
+            });
+            const dtEl = document.getElementById("dateList"); dtEl.innerHTML = "";
+            DATES.forEach(d => {
+                const chip = document.createElement("div"); chip.className = "chip" + (state.date === d.iso ? " selected" : "");
+                chip.textContent = d.label; chip.onclick = () => { state.date = d.iso; renderAll(); }; dtEl.appendChild(chip);
+            });
+            const slEl = document.getElementById("slotList"); slEl.innerHTML = "";
+            SLOTS.forEach(slot => {
+                const chip = document.createElement("div"); chip.className = "chip" + (state.time === slot ? " selected" : "");
+                chip.textContent = `🕒 ${slot}`; chip.onclick = () => { state.time = slot; renderAll(); }; slEl.appendChild(chip);
+            });
+            document.getElementById("submitBtn").textContent = `Забронировать бокс: ${state.service.price} ₽ • ${state.date} в ${state.time}`;
+        }
+        function submitBooking() {
+            const phone = document.getElementById("phoneInput").value.trim();
+            if (phone.length < 6) { alert("Укажите контактный номер телефона!"); return; }
+            const payload = JSON.stringify({ action: "webapp_booking", service_id: state.service.id, master_id: state.master.id, booking_date: state.date, booking_time: state.time, phone: phone });
+            if (tg && tg.sendData) { tg.sendData(payload); } else { alert("Демо в браузере:
+" + payload); }
+        }
+        renderAll();
+    </script>
+</body>
+</html>
