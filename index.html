@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLACKSTAR Detailing — Запись на услуги</title>
+    <title>BLACKSTAR Detailing — Онлайн-запись</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -81,76 +81,193 @@
     <script>
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
         if (tg) { tg.expand(); tg.ready(); }
+
         const CATALOG = [
-            { id: 1, name: "🛡 Защитные пленки (PPF)", services: [
-                { id: 1, name: "Полная оклейка кузова полиуретаном", price: 145000, duration: "8 ч" },
-                { id: 2, name: "Оклейка зоны риска", price: 45000, duration: "4 ч" }
-            ], masters: [{ id: 1, name: "Алексей Смирнов", spec: "Старший мастер PPF", rating: "5.0" }] },
-            { id: 2, name: "✨ Полировка и керамика", services: [
-                { id: 3, name: "Абразивная полировка + Керамика", price: 32000, duration: "6 ч" },
-                { id: 4, name: "Восстановительная полировка фар", price: 3500, duration: "1.5 ч" }
-            ], masters: [{ id: 2, name: "Денис Васильев", spec: "Технолог-детейлер", rating: "4.9" }] },
-            { id: 3, name: "🧼 Детейлинг-мойка", services: [
-                { id: 5, name: "Детейлинг-мойка и подвеска", price: 3500, duration: "2 ч" },
-                { id: 6, name: "Полная химчистка салона", price: 16000, duration: "5 ч" }
-            ], masters: [{ id: 3, name: "Иван Морозов", spec: "Специалист по салону", rating: "4.8" }] },
-            { id: 4, name: "🛞 Тонировка", services: [
-                { id: 7, name: "Атермальная тонировка полукруга", price: 9000, duration: "2.5 ч" }
-            ], masters: [{ id: 4, name: "Максим Орлов", spec: "Мастер по тонировке", rating: "4.9" }] }
+            {
+                id: 1,
+                name: "🛡 Защитные пленки (PPF)",
+                services: [
+                    { id: 1, name: "Полная оклейка кузова полиуретаном", price: 145000, duration: "8 ч" },
+                    { id: 2, name: "Оклейка зоны риска", price: 45000, duration: "4 ч" }
+                ],
+                masters: [
+                    { id: 1, name: "Алексей Смирнов", spec: "Старший мастер PPF", rating: "5.0" }
+                ]
+            },
+            {
+                id: 2,
+                name: "✨ Полировка и керамика",
+                services: [
+                    { id: 3, name: "Абразивная полировка + Керамика", price: 32000, duration: "6 ч" },
+                    { id: 4, name: "Восстановительная полировка фар", price: 3500, duration: "1.5 ч" }
+                ],
+                masters: [
+                    { id: 2, name: "Денис Васильев", spec: "Технолог-детейлер", rating: "4.9" }
+                ]
+            },
+            {
+                id: 3,
+                name: "🧼 Детейлинг-мойка",
+                services: [
+                    { id: 5, name: "Детейлинг-мойка и подвеска", price: 3500, duration: "2 ч" },
+                    { id: 6, name: "Полная химчистка салона", price: 16000, duration: "5 ч" }
+                ],
+                masters: [
+                    { id: 3, name: "Иван Морозов", spec: "Специалист по салону", rating: "4.8" }
+                ]
+            },
+            {
+                id: 4,
+                name: "🛞 Тонировка",
+                services: [
+                    { id: 7, name: "Атермальная тонировка полукруга", price: 9000, duration: "2.5 ч" }
+                ],
+                masters: [
+                    { id: 4, name: "Максим Орлов", spec: "Мастер по тонировке", rating: "4.9" }
+                ]
+            }
         ];
+
         const SLOTS = ["09:00", "12:00", "15:00", "18:00"];
-        let state = { catIndex: 0, service: CATALOG[0].services[0], master: CATALOG[0].masters[0], date: "", time: "12:00" };
+
+        let state = {
+            catIndex: 0,
+            service: CATALOG[0].services[0],
+            master: CATALOG[0].masters[0],
+            date: "",
+            time: "12:00"
+        };
+
         function generateDates() {
             const weekdays = ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
-            const list = []; const now = new Date();
+            const list = [];
+            const now = new Date();
             for (let i = 0; i < 7; i++) {
-                const d = new Date(now); d.setDate(now.getDate() + i);
-                const yyyy = d.getFullYear(); const mm = String(d.getMonth() + 1).padStart(2, "0"); const dd = String(d.getDate()).padStart(2, "0");
+                const d = new Date(now);
+                d.setDate(now.getDate() + i);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, "0");
+                const dd = String(d.getDate()).padStart(2, "0");
                 const iso = `${yyyy}-${mm}-${dd}`;
                 const label = i === 0 ? `Сегодня (${dd}.${mm})` : (i === 1 ? `Завтра (${dd}.${mm})` : `${dd}.${mm} (${weekdays[d.getDay()]})`);
                 list.push({ iso, label });
             }
-            state.date = list[0].iso; return list;
+            state.date = list[0].iso;
+            return list;
         }
+
         const DATES = generateDates();
+
         function renderAll() {
-            const tabsEl = document.getElementById("categoryTabs"); tabsEl.innerHTML = "";
+            // 1. Категории
+            const tabsEl = document.getElementById("categoryTabs");
+            tabsEl.innerHTML = "";
             CATALOG.forEach((cat, idx) => {
-                const btn = document.createElement("div"); btn.className = "tab" + (idx === state.catIndex ? " active" : "");
-                btn.textContent = cat.name; btn.onclick = () => { state.catIndex = idx; state.service = CATALOG[idx].services[0]; state.master = CATALOG[idx].masters[0]; renderAll(); };
+                const btn = document.createElement("div");
+                btn.className = "tab" + (idx === state.catIndex ? " active" : "");
+                btn.textContent = cat.name;
+                btn.onclick = () => {
+                    state.catIndex = idx;
+                    state.service = CATALOG[idx].services[0];
+                    state.master = CATALOG[idx].masters[0];
+                    renderAll();
+                };
                 tabsEl.appendChild(btn);
             });
-            const srvEl = document.getElementById("serviceList"); srvEl.innerHTML = "";
+
+            // 2. Услуги
+            const srvEl = document.getElementById("serviceList");
+            srvEl.innerHTML = "";
             CATALOG[state.catIndex].services.forEach(srv => {
-                const card = document.createElement("div"); card.className = "service-card" + (state.service.id === srv.id ? " selected" : "");
-                card.innerHTML = `<div class="srv-info"><h3>${srv.name}</h3><span>⏱ ${srv.duration}</span></div><div class="srv-price">${srv.price} ₽</div>`;
-                card.onclick = () => { state.service = srv; renderAll(); }; srvEl.appendChild(card);
+                const card = document.createElement("div");
+                card.className = "service-card" + (state.service.id === srv.id ? " selected" : "");
+                card.innerHTML = `
+                    <div class="srv-info">
+                        <h3>${srv.name}</h3>
+                        <span>⏱ ${srv.duration}</span>
+                    </div>
+                    <div class="srv-price">${srv.price} ₽</div>
+                `;
+                card.onclick = () => {
+                    state.service = srv;
+                    renderAll();
+                };
+                srvEl.appendChild(card);
             });
-            const mstEl = document.getElementById("masterList"); mstEl.innerHTML = "";
+
+            // 3. Мастера
+            const mstEl = document.getElementById("masterList");
+            mstEl.innerHTML = "";
             CATALOG[state.catIndex].masters.forEach(mst => {
-                const card = document.createElement("div"); card.className = "master-card" + (state.master.id === mst.id ? " selected" : "");
-                card.innerHTML = `<h4>👩‍🎨 ${mst.name}</h4><p>${mst.spec}</p><div class="rating">⭐ ${mst.rating}</div>`;
-                card.onclick = () => { state.master = mst; renderAll(); }; mstEl.appendChild(card);
+                const card = document.createElement("div");
+                card.className = "master-card" + (state.master.id === mst.id ? " selected" : "");
+                card.innerHTML = `
+                    <h4>👨‍🔧 ${mst.name}</h4>
+                    <p>${mst.spec}</p>
+                    <div class="rating">⭐ ${mst.rating}</div>
+                `;
+                card.onclick = () => {
+                    state.master = mst;
+                    renderAll();
+                };
+                mstEl.appendChild(card);
             });
-            const dtEl = document.getElementById("dateList"); dtEl.innerHTML = "";
+
+            // 4. Даты
+            const dtEl = document.getElementById("dateList");
+            dtEl.innerHTML = "";
             DATES.forEach(d => {
-                const chip = document.createElement("div"); chip.className = "chip" + (state.date === d.iso ? " selected" : "");
-                chip.textContent = d.label; chip.onclick = () => { state.date = d.iso; renderAll(); }; dtEl.appendChild(chip);
+                const chip = document.createElement("div");
+                chip.className = "chip" + (state.date === d.iso ? " selected" : "");
+                chip.textContent = d.label;
+                chip.onclick = () => {
+                    state.date = d.iso;
+                    renderAll();
+                };
+                dtEl.appendChild(chip);
             });
-            const slEl = document.getElementById("slotList"); slEl.innerHTML = "";
+
+            // 5. Время
+            const slEl = document.getElementById("slotList");
+            slEl.innerHTML = "";
             SLOTS.forEach(slot => {
-                const chip = document.createElement("div"); chip.className = "chip" + (state.time === slot ? " selected" : "");
-                chip.textContent = `🕒 ${slot}`; chip.onclick = () => { state.time = slot; renderAll(); }; slEl.appendChild(chip);
+                const chip = document.createElement("div");
+                chip.className = "chip" + (state.time === slot ? " selected" : "");
+                chip.textContent = `🕒 ${slot}`;
+                chip.onclick = () => {
+                    state.time = slot;
+                    renderAll();
+                };
+                slEl.appendChild(chip);
             });
+
+            // 6. Кнопка
             document.getElementById("submitBtn").textContent = `Забронировать бокс: ${state.service.price} ₽ • ${state.date} в ${state.time}`;
         }
+
         function submitBooking() {
             const phone = document.getElementById("phoneInput").value.trim();
-            if (phone.length < 6) { alert("Укажите контактный номер телефона!"); return; }
-            const payload = JSON.stringify({ action: "webapp_booking", service_id: state.service.id, master_id: state.master.id, booking_date: state.date, booking_time: state.time, phone: phone });
-            if (tg && tg.sendData) { tg.sendData(payload); } else { alert("Демо в браузере:
-" + payload); }
+            if (phone.length < 6) {
+                alert("Укажите контактный номер телефона!");
+                return;
+            }
+            const payload = JSON.stringify({
+                action: "webapp_booking",
+                service_id: state.service.id,
+                master_id: state.master.id,
+                booking_date: state.date,
+                booking_time: state.time,
+                phone: phone
+            });
+
+            if (tg && tg.sendData) {
+                tg.sendData(payload);
+            } else {
+                alert("Демо в браузере:
+" + payload);
+            }
         }
+
         renderAll();
     </script>
 </body>
